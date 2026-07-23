@@ -174,6 +174,8 @@ async function exportarReportePDF() {
     await html2canvas(document.getElementById('reporte-contenido'), { scale: 1.5, backgroundColor: '#020617' }).then(canvas => {
         doc.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 210, (canvas.height * 210) / canvas.width); doc.save('Reporte_Alta_Direccion.pdf');
     });
+    // Actualización definitiva
+
     btn.textContent = "Exportar PDF";
 }
 
