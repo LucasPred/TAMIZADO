@@ -1,305 +1,140 @@
-<!DOCTYPE html><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔒 Sistema Restringido - Laboratorio de Tamizado Avanzado</title>
-    <!-- Tailwind CSS para Diseño Impecable y Corporativo -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js para Gráficos de Distribución Granulométrica -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- jsPDF y html2canvas para Exportación de Reportes de Directorio -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <!-- Lucide Icons para Interfaz Profesional -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <title>🔒 Laboratorio de Tamizado Avanzado - Panel de Control</title>
+    <script src="https://tailwindcss.com"></script>
+    <script src="https://jsdelivr.net"></script>
+    <script src="https://cloudflare.com"></script>
+    <script src="https://cloudflare.com"></script>
+    <script src="https://unpkg.com"></script>
     <style>
-        /* Capa Anti-Copia y Anti-Inspección Básica del lado del Navegador */
         body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans" oncontextmenu="return false;">
 
-    <!-- PANTALLA DE ACCESO RESTRINGIDO (LOGIN) -->
-    <div id="login-screen" class="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 px-4">
-        <div class="bg-slate-800/50 backdrop-blur-md p-8 rounded-2xl border border-slate-700/50 shadow-2xl max-w-md w-full text-center">
-            <div class="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
-                <i data-lucide="lock" class="w-8 h-8"></i>
+    <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50 px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <div class="flex items-center gap-2 text-amber-500 font-bold uppercase tracking-wider text-xs mb-1">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Inteligencia Operacional Activa
             </div>
-            <h1 class="text-2xl font-bold tracking-tight text-white mb-2">Acceso de Alta Dirección</h1>
-            <p class="text-slate-400 text-sm mb-6">Módulo de Simulación Analítica y Propiedad Intelectual Confidencial.</p>
-            <form id="login-form" class="space-y-4" onsubmit="handleLogin(event)">
-                <div>
-                    <input type="password" id="password-input" placeholder="Introducir Contraseña Clave" 
-                        class="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl focus:outline-none focus:border-amber-500 text-center tracking-widest text-white transition-all">
-                </div>
-                <div id="login-error" class="text-red-400 text-xs hidden font-medium">Contraseña incorrecta. Acceso denegado.</div>
-                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl transition-all shadow-lg shadow-amber-500/10 flex items-center justify-center gap-2">
-                    <i data-lucide="shield-check" class="w-5 h-5"></i> Descifrar Laboratorio
-                </button>
-            </form>
-            <div class="mt-6 text-[10px] text-slate-500 tracking-wider uppercase">Capa de Seguridad Base de Datos Encriptada SHA-256</div>
+            <h1 class="text-xl font-bold text-white tracking-tight">Laboratorio Virtual de Tamizado de Arenas Especiales</h1>
         </div>
-    </div>
+        <div class="flex items-center gap-3">
+            <button onclick="exportarReportePDF()" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-amber-500/10 text-sm">
+                <i data-lucide="file-text" class="w-4 h-4"></i> Exportar a PDF de Directorio
+            </button>
+            <button onclick="window.location.href = 'index.html'" class="bg-slate-800 hover:bg-slate-750 text-slate-300 px-4 py-2.5 rounded-xl transition-all border border-slate-700 text-sm flex items-center gap-2">
+                <i data-lucide="log-out" class="w-4 h-4"></i> Bloquear Consola
+            </button>
+        </div>
+    </header>
 
-    <!-- CONTENEDOR PRINCIPAL DE LA APLICACIÓN -->
-    <div id="app-container" class="hidden"></div>
-
-    <!-- LOGICA DE SEGURIDAD, CONTROL Y SIMULACIÓN -->
-    <script>
-        // Inicializar iconos de Lucide
-        lucide.createIcons();
-
-        // Bloqueo de teclas de inspección comunes (F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U)
-        document.addEventListener('keydown', function(e) {
-            if (e.keyCode == 123 || 
-                (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || 
-                (e.ctrlKey && e.keyCode == 85)) {
-                e.preventDefault();
-                return false;
-            }
-        });
-
-        // HASH SHA-256 de la contraseña "Directorio2026"
-        const targetHash = "96cb71116ec7263595b119dc9469502b4fc32dd32669e2c608f3316ba488fb24";
-
-        async function sha256(message) {
-            const msgBuffer = new TextEncoder().encode(message);                    
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
-        async function handleLogin(e) {
-            e.preventDefault();
-            const password = document.getElementById('password-input').value;
-            const inputHash = await sha256(password);
-
-            if (inputHash === targetHash) {
-                document.getElementById('login-screen').classList.add('hidden');
-                const appSlot = document.getElementById('app-container');
-                appSlot.classList.remove('hidden');
-                appSlot.innerHTML = getCoreDashboardHTML();
-                lucide.createIcons();
-                initSimulador();
-            } else {
-                const error = document.getElementById('login-error');
-                error.classList.remove('hidden');
-                document.getElementById('password-input').classList.add('border-red-500');
-            }
-        }
-
-        function getCoreDashboardHTML() {
-            return `
-            <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50 px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <main class="p-6 space-y-6 max-w-[1600px] mx-auto" id="reporte-contenido">
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-5">
+                <h2 class="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
+                    <i data-lucide="sliders" class="text-amber-500 w-5 h-5"></i> 1. Parámetros de Carga Inicial
+                </h2>
+                
                 <div>
-                    <div class="flex items-center gap-2 text-amber-500 font-bold uppercase tracking-wider text-xs mb-1">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Sistema de Inteligencia Operacional
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Materia Prima Base</label>
+                    <select id="materia-prima" onchange="actualizarGranulometriaBase()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                        <option value="resina">Arena P/ Frac_Hidráulico (Premium Fina)</option>
+                        <option value="fundicion">Arena P/ Fundición Gris (Media)</option>
+                        <option value="construccion">Arena Especial Sílice Alta Pureza (Gruesa)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Caudal de Ingreso (Toneladas / Hora)</label>
+                    <div class="flex items-center gap-4">
+                        <input type="range" id="caudal-input" min="5" max="100" value="40" oninput="calcularModelo()" class="w-full accent-amber-500">
+                        <span class="text-lg font-bold text-amber-500 w-16 text-right" id="caudal-val">40 t/h</span>
                     </div>
-                    <h1 class="text-xl font-bold text-white tracking-tight">Laboratorio Virtual de Tamizado de Arenas Especiales</h1>
                 </div>
-                <div class="flex items-center gap-3">
-                    <button onclick="exportarReportePDF()" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-amber-500/10 text-sm">
-                        <i data-lucide="file-text" class="w-4 h-4"></i> Exportar a PDF de Directorio
-                    </button>
-                    <button onclick="window.location.reload()" class="bg-slate-800 hover:bg-slate-750 text-slate-300 px-4 py-2.5 rounded-xl transition-all border border-slate-700 text-sm flex items-center gap-2">
-                        <i data-lucide="log-out" class="w-4 h-4"></i> Cerrar Sesión Segura
-                    </button>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Configuración Mecánica de la Zaranda</label>
+                    <select id="pisos-select" onchange="alternarPisosVisibles()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                        <option value="2">Zaranda de 2 Pisos (Estándar)</option>
+                        <option value="3">Zaranda de 3 Pisos (Clasificación Avanzada)</option>
+                    </select>
                 </div>
-            </header>
 
-            <main class="p-6 space-y-6 max-w-[1600px] mx-auto" id="reporte-contenido">
-                <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-5">
-                        <h2 class="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
-                            <i data-lucide="sliders" class="text-amber-500 w-5 h-5"></i> 1. Parámetros de Carga Inicial
-                        </h2>
-                        
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Materia Prima Base</label>
-                            <select id="materia-prima" onchange="actualizarGranulometriaBase()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
-                                <option value="resina">Arena P/ Frac_Hidráulico (Premium Fina)</option>
-                                <option value="fundicion">Arena P/ Fundición Gris (Media)</option>
-                                <option value="construccion">Arena Especial Sílice Alta Pureza (Gruesa)</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Caudal de Ingreso (Toneladas / Hora)</label>
-                            <div class="flex items-center gap-4">
-                                <input type="range" id="caudal-input" min="5" max="100" value="40" oninput="calcularModelo()" class="w-full accent-amber-500">
-                                <span class="text-lg font-bold text-amber-500 w-16 text-right" id="caudal-val">40 t/h</span>
+                <div class="pt-2 space-y-3">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Configuración de Tramos por Piso</h3>
+                    
+                    <div id="piso1-card" class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
+                        <div class="flex justify-between text-xs font-bold text-slate-300"><span>PISO 1 (Superior - Corte Grueso)</span></div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                                <label class="text-[10px] text-slate-500">Tramo A (Inicio)</label>
+                                <select id="p1-m1" onchange="calcularModelo()" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-[11px] text-white focus:outline-none"></select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-500">Tramo B (Fin)</label>
+                                <select id="p1-m2" onchange="calcularModelo()" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-[11px] text-white focus:outline-none"></select>
                             </div>
                         </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Configuración Mecánica de la Zaranda</label>
-                            <select id="pisos-select" onchange="alternarPisosVisibles()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
-                                <option value="2">Zaranda de 2 Pisos (Estándar)</option>
-                                <option value="3">Zaranda de 3 Pisos (Clasificación Avanzada)</option>
-                            </select>
-                        </div>
-
-                        <div class="pt-2 space-y-3">
-                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Configuración de Tramos por Piso</h3>
-                            
-                            <!-- Piso 1 -->
-                            <div id="piso1-card" class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
-                                <div class="flex justify-between text-xs font-bold text-slate-300">
-                                    <span>PISO 1 (Superior - Corte Grueso)</span>
-                                </div>
-                                <div class="grid grid-cols-2 gap-2 text-xs">
-                                    <div>
-
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔒 Sistema Restringido - Laboratorio de Tamizado Avanzado</title>
-    <!-- Tailwind CSS para Diseño Impecable y Corporativo -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js para Gráficos de Distribución Granulométrica -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- jsPDF y html2canvas para Exportación de Reportes de Directorio -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <!-- Lucide Icons para Interfaz Profesional -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        /* Capa Anti-Copia y Anti-Inspección Básica del lado del Navegador */
-        body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
-    </style>
-</head>
-<body class="bg-slate-900 text-slate-100 min-h-screen font-sans" oncontextmenu="return false;">
-
-    <!-- PANTALLA DE ACCESO RESTRINGIDO (LOGIN) -->
-    <div id="login-screen" class="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 px-4">
-        <div class="bg-slate-800/50 backdrop-blur-md p-8 rounded-2xl border border-slate-700/50 shadow-2xl max-w-md w-full text-center">
-            <div class="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
-                <i data-lucide="lock" class="w-8 h-8"></i>
-            </div>
-            <h1 class="text-2xl font-bold tracking-tight text-white mb-2">Acceso de Alta Dirección</h1>
-            <p class="text-slate-400 text-sm mb-6">Módulo de Simulación Analítica y Propiedad Intelectual Confidencial.</p>
-            <form id="login-form" class="space-y-4" onsubmit="handleLogin(event)">
-                <div>
-                    <input type="password" id="password-input" placeholder="Introducir Contraseña Clave" 
-                        class="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl focus:outline-none focus:border-amber-500 text-center tracking-widest text-white transition-all">
-                </div>
-                <div id="login-error" class="text-red-400 text-xs hidden font-medium">Contraseña incorrecta. Acceso denegado.</div>
-                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl transition-all shadow-lg shadow-amber-500/10 flex items-center justify-center gap-2">
-                    <i data-lucide="shield-check" class="w-5 h-5"></i> Descifrar Laboratorio
-                </button>
-            </form>
-            <div class="mt-6 text-[10px] text-slate-500 tracking-wider uppercase">Capa de Seguridad Base de Datos Encriptada SHA-256</div>
-        </div>
-    </div>
-
-    <!-- CONTENEDOR PRINCIPAL DE LA APLICACIÓN -->
-    <div id="app-container" class="hidden"></div>
-
-    <!-- LOGICA DE SEGURIDAD, CONTROL Y SIMULACIÓN -->
-    <script>
-        // Inicializar iconos de Lucide
-        lucide.createIcons();
-
-        // Bloqueo de teclas de inspección comunes (F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U)
-        document.addEventListener('keydown', function(e) {
-            if (e.keyCode == 123 || 
-                (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || 
-                (e.ctrlKey && e.keyCode == 85)) {
-                e.preventDefault();
-                return false;
-            }
-        });
-
-        // HASH SHA-256 de la contraseña "Directorio2026"
-        const targetHash = "96cb71116ec7263595b119dc9469502b4fc32dd32669e2c608f3316ba488fb24";
-
-        async function sha256(message) {
-            const msgBuffer = new TextEncoder().encode(message);                    
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
-        async function handleLogin(e) {
-            e.preventDefault();
-            const password = document.getElementById('password-input').value;
-            const inputHash = await sha256(password);
-
-            if (inputHash === targetHash) {
-                document.getElementById('login-screen').classList.add('hidden');
-                const appSlot = document.getElementById('app-container');
-                appSlot.classList.remove('hidden');
-                appSlot.innerHTML = getCoreDashboardHTML();
-                lucide.createIcons();
-                initSimulador();
-            } else {
-                const error = document.getElementById('login-error');
-                error.classList.remove('hidden');
-                document.getElementById('password-input').classList.add('border-red-500');
-            }
-        }
-
-        function getCoreDashboardHTML() {
-            return `
-            <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50 px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <div class="flex items-center gap-2 text-amber-500 font-bold uppercase tracking-wider text-xs mb-1">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Sistema de Inteligencia Operacional
                     </div>
-                    <h1 class="text-xl font-bold text-white tracking-tight">Laboratorio Virtual de Tamizado de Arenas Especiales</h1>
-                </div>
-                <div class="flex items-center gap-3">
-                    <button onclick="exportarReportePDF()" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-amber-500/10 text-sm">
-                        <i data-lucide="file-text" class="w-4 h-4"></i> Exportar a PDF de Directorio
-                    </button>
-                    <button onclick="window.location.reload()" class="bg-slate-800 hover:bg-slate-750 text-slate-300 px-4 py-2.5 rounded-xl transition-all border border-slate-700 text-sm flex items-center gap-2">
-                        <i data-lucide="log-out" class="w-4 h-4"></i> Cerrar Sesión Segura
-                    </button>
-                </div>
-            </header>
 
-            <main class="p-6 space-y-6 max-w-[1600px] mx-auto" id="reporte-contenido">
-                <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-5">
-                        <h2 class="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
-                            <i data-lucide="sliders" class="text-amber-500 w-5 h-5"></i> 1. Parámetros de Carga Inicial
-                        </h2>
-                        
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Materia Prima Base</label>
-                            <select id="materia-prima" onchange="actualizarGranulometriaBase()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
-                                <option value="resina">Arena P/ Frac_Hidráulico (Premium Fina)</option>
-                                <option value="fundicion">Arena P/ Fundición Gris (Media)</option>
-                                <option value="construccion">Arena Especial Sílice Alta Pureza (Gruesa)</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Caudal de Ingreso (Toneladas / Hora)</label>
-                            <div class="flex items-center gap-4">
-                                <input type="range" id="caudal-input" min="5" max="100" value="40" oninput="calcularModelo()" class="w-full accent-amber-500">
-                                <span class="text-lg font-bold text-amber-500 w-16 text-right" id="caudal-val">40 t/h</span>
+                    <div id="piso2-card" class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
+                        <div class="flex justify-between text-xs font-bold text-slate-300"><span>PISO 2 (Intermedio)</span></div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                                <label class="text-[10px] text-slate-500">Tramo A (Inicio)</label>
+                                <select id="p2-m1" onchange="calcularModelo()" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-[11px] text-white focus:outline-none"></select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-500">Tramo B (Fin)</label>
+                                <select id="p2-m2" onchange="calcularModelo()" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-[11px] text-white focus:outline-none"></select>
                             </div>
                         </div>
+                    </div>
 
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Configuración Mecánica de la Zaranda</label>
-                            <select id="pisos-select" onchange="alternarPisosVisibles()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
-                                <option value="2">Zaranda de 2 Pisos (Estándar)</option>
-                                <option value="3">Zaranda de 3 Pisos (Clasificación Avanzada)</option>
-                            </select>
+                    <div id="piso3-card" class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2 hidden">
+                        <div class="flex justify-between text-xs font-bold text-slate-300"><span>PISO 3 (Inferior - Captura de Finos)</span></div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                                <label class="text-[10px] text-slate-500">Tramo A (Inicio)</label>
+                                <select id="p3-m1" onchange="calcularModelo()" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-[11px] text-white focus:outline-none"></select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-500">Tramo B (Fin)</label>
+                                <select id="p3-m2" onchange="calcularModelo()" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-[11px] text-white focus:outline-none"></select>
+                            </div>
                         </div>
+                    </div>
+                </div>
+            </div>
 
-                        <div class="pt-2 space-y-3">
-                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Configuración de Tramos por Piso</h3>
-                            
-                            <!-- Piso 1 -->
-                            <div id="piso1-card" class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
-                                <div class="flex justify-between text-xs font-bold text-slate-300">
-                                    <span>PISO 1 (Superior - Corte Grueso)</span>
-                                </div>
-                                <div class="grid grid-cols-2 gap-2 text-xs">
-                                    <div>
-Usa el código con precaución.Tramo A (Inicio)Tramo B (Fin)PISO 2 (Intermedio)Tramo A (Inicio)Tramo B (Fin)PISO 3 (Inferior - Captura de Finos)Tramo A (Inicio)Tramo B (Fin) Distribución Masiva y Eficiencia de CorteEficiencia Global94.2%Producto Conforme0.0 t/hRechazo / Cola0.0 t/h`;}const catálogoMallas = [{ id: "M01", abertura: 2.00, hilo: 0.80, material: "Acero Carbono AISI 1045", area: 51.0, uso: "Corte superior - Descarte de sobretamaños", mecanico: "Alta resistencia al impacto severo" },{ id: "M02", abertura: 1.18, hilo: 0.50, material: "Acero Inoxidable AISI 304", area: 49.3, uso: "Fraccionamiento intermedio equilibrado", mecanico: "Excelente vida útil sin oxidación" },{ id: "M03", abertura: 0.60, hilo: 0.32, material: "Acero Inoxidable AISI 316", area: 42.5, uso: "Zonificación fina de alta pureza", mecanico: "Resistencia química absoluta" },{ id: "M04", abertura: 0.30, hilo: 0.20, material: "Poliuretano Inyectado", area: 36.0, uso: "Tramos terminales - Control de finos", mecanico: "Flexibilidad extrema, autolimpiante" },{ id: "M05", abertura: 0.15, hilo: 0.10, material: "Nylon Alta Tenacidad", area: 36.0, uso: "Micro-granulometrías ultra finas", mecanico: "Requiere tensión estructural perfecta" }];const problemasLimpieza = [{ material: "Acero Carbono AISI 1045", problema: "Acuñamiento de granos angulares de sílice en mallas.", frecuencia: "Cada 4 horas.", solucion: "Sistemas de esferas rebotadoras de caucho duras." },{ material: "Acero Inoxidable AISI 304/316", problema: "Cegado por humedad residual y adherencia estática.", frecuencia: "Cada 8 horas.", solucion: "Lavado con agua presurizada o barras ultrasónicas." },{ material: "Poliuretano Inyectado", problema: "Taponamiento elástico menor por arcillas densas.", frecuencia: "Semanal.", solucion: "Aprovechamiento de la flexibilidad elástica natural." }];let granulometriaChart = null;function initSimulador() {const selectors = ['p1-m1', 'p1-m2', 'p2-m1', 'p2-m2', 'p3-m1', 'p3-m2'];selectors.forEach((selId, index) => {const select = document.getElementById(selId);if (select) {catálogoMallas.forEach(malla => {const opt = document.createElement('option');opt.value = malla.id;opt.textContent = ${malla.id} (${malla.abertura}mm);select.appendChild(opt);});select.selectedIndex = Math.min(index % catálogoMallas.length, catálogoMallas.length - 1);}});const tbody = document.getElementById('tabla-mallas-body');catálogoMallas.forEach(m => {tbody.innerHTML += <tr class="hover:bg-slate-900/50 transition-colors"> <td class="p-3 font-mono font-bold text-amber-500">${m.id}</td> <td class="p-3 font-semibold">${m.abertura.toFixed(2)} mm</td> <td class="p-3 text-slate-400">${m.hilo.toFixed(2)} mm</td> <td class="p-3"><span class="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[11px] text-white">${m.material}</span></td> <td class="p-3 text-emerald-400 font-bold">${m.area}%</td> <td class="p-3 text-slate-400">${m.uso}</td> <td class="p-3 text-slate-500 italic">${m.mecanico}</td> </tr>;});const contenedorProblemas = document.getElementById('mapeo-problemas');problemasLimpieza.forEach(p => {contenedorProblemas.innerHTML += <div class="p-4 bg-slate-900/80 rounded-xl border border-slate-800 space-y-2"> <div class="flex justify-between items-center"> <span class="text-xs font-bold text-amber-500 uppercase tracking-wider">${p.material}</span> <span class="text-[10px] bg-red-500/10 text-red-400 px-2 py-0.5 rounded border border-red-500/20 font-medium">Frecuencia: ${p.frecuencia}</span> </div> <p class="text-xs text-slate-200"><strong class="text-red-400/90 font-medium">Problema Típico:</strong> ${p.problema}</p> <p class="text-xs text-slate-400"><strong class="text-emerald-400 font-medium">Solución Planta:</strong> ${p.solucion}</p> </div>;});crearEfectoArena();calcularModelo();}function alternarPisosVisibles() {const pisos = document.getElementById('pisos-select').value;const card3 = document.getElementById('piso3-card');if (pisos === "3") {card3.classList.remove('hidden');} else {card3.classList.add('hidden');}calcularModelo();}function actualizarGranulometriaBase() {calcularModelo();}function calcularModelo() {const caudal = parseFloat(document.getElementById('caudal-input').value);document.getElementById('caudal-val').textContent = caudal + ' t/h';const tipoMateria = document.getElementById('materia-prima').value;const numPisos = document.getElementById('pisos-select') ? document.getElementById('pisos-select').value : "2";let baseDist = [20, 25, 30, 15, 10];if (tipoMateria === 'resina') baseDist = [5, 15, 25, 35, 20];if (tipoMateria === 'construccion') baseDist = [35, 30, 20, 10, 5];if (tipoMateria === 'fundicion') baseDist = [15, 35, 30, 15, 5];let eficienciaFactor = 1.0;if (numPisos === "3") {eficienciaFactor = 1.04;}const m1_abertura = catálogoMallas.find(m => m.id === document.getElementById('p1-m1').value).abertura;const m2_abertura = catálogoMallas.find(m => m.id === document.getElementById('p1-m2').value).abertura;const desviacion = Math.abs(m1_abertura - m2_abertura);const efBase = Math.max(60, 95 - (desviacion * 12));const eficienciaCalculada = Math.min(100, efBase * eficienciaFactor).toFixed(1);const conforme = (caudal * (baseDist + baseDist) / 100 * (eficienciaCalculada / 100)).toFixed(1);const rechazo = (caudal - conforme).toFixed(1);document.getElementById('kpi-eficiencia').textContent = eficienciaCalculada + '%';document.getElementById('kpi-conforme').textContent = conforme + ' t/h';document.getElementById('kpi-rechazo').textContent = rechazo + ' t/h';const datosReales = baseDist.map(val => Math.round(val * (eficienciaCalculada / 100)));renderizarGrafico(baseDist, datosReales);}function renderizarGrafico(teorico, real) {const ctx = document.getElementById('chart-granulometria').getContext('2d');if (granulometriaChart) {granulometriaChart.destroy();}granulometriaChart = new Chart(ctx, {type: 'bar',data: {labels: ['> 2.0mm', '1.18mm-2.0mm', '0.60mm-1.18mm', '0.30mm-0.60mm', '< 0.30mm'],datasets: [{ label: 'Curva Teórica Materia Prima (%)', data: teorico, backgroundColor: 'rgba(71, 85, 105, 0.4)', borderColor: 'rgba(148, 163, 184, 0.8)', borderWidth: 1.5 },{ label: 'Rendimiento Real Clasificado (%)', data: real, backgroundColor: 'rgba(245, 158, 11, 0.75)', borderColor: '#f59e0b', borderWidth: 1.5 }]},options: {responsive: true,maintainAspectRatio: false,plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },scales: {y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', callback: v => v + '%' } },x: { grid: { display: false }, ticks: { color: '#94a3b8' } }}}});}function crearEfectoArena() {const contenedor = document.getElementById('simulador-camara');if(!contenedor) return;contenedor.innerHTML = '';for (let i = 0; i < 40; i++) {const dot = document.createElement('div');const tSize = Math.random() * 3 + 2;dot.style.width = tSize + 'px';dot.style.height = tSize + 'px';dot.style.backgroundColor = Math.random() > 0.4 ? '#f59e0b' : '#94a3b8';dot.style.position = 'absolute';dot.style.top = (Math.random() * 100) + '%';dot.style.left = (Math.random() * 100) + '%';dot.style.borderRadius = '50%';contenedor.appendChild(dot);}}function tomarFotografiaMuestra() {crearEfectoArena();const historial = document.getElementById('historial-muestras');if (historial.querySelector('div.italic')) {historial.innerHTML = '';}const ahora = new Date();const marcaTiempo = ahora.toLocaleTimeString();const selectEl = document.getElementById('materia-prima');const mp = selectEl.options[selectEl.selectedIndex].text.substring(0, 15);const ef = document.getElementById('kpi-eficiencia').textContent;const item = document.createElement('div');item.className = "p-2 bg-slate-950 border border-slate-800 rounded-lg flex justify-between items-center text-[11px] text-slate-300";item.innerHTML = <div><span class="text-amber-500 font-bold">[${marcaTiempo}]</span> Muestra ${mp}...</div><div class="text-slate-400">Ef: <span class="text-emerald-400 font-bold">${ef}</span></div>;historial.insertBefore(item, historial.firstChild);}async function exportarReportePDF() {const { jsPDF } = window.jspdf;const doc = new jsPDF('p', 'mm', 'a4');const elemento = document.getElementById('reporte-contenido');const btn = document.querySelector('button[onclick="exportarReportePDF()"]');const textoOriginal = btn.innerHTML;btn.innerHTML = Procesando...;await html2canvas(elemento, { scale: 2, backgroundColor: '#020617', useCORS: true }).then(canvas => {const imgData = canvas.toDataURL('image/png');const imgWidth = 210;const pageHeight = 295;const imgHeight = (canvas.height * imgWidth) / canvas.width;let heightLeft = imgHeight;let position = 0;doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);heightLeft -= pageHeight;while (heightLeft >= 0) {position = heightLeft - imgHeight;doc.addPage();doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);heightLeft -= pageHeight;}doc.save(Reporte_Directorio_Tamizado.pdf);});btn.innerHTML = textoOriginal;lucide.createIcons();}
+            <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 lg:col-span-2 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3 mb-4">
+                        <i data-lucide="bar-chart-3" class="text-amber-500 w-5 h-5"></i> Distribución Masiva y Eficiencia de Corte
+                    </h2>
+                    <div class="h-64 relative">
+                        <canvas id="chart-granulometria"></canvas>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-4 pt-4 border-t border-slate-800/80 mt-4">
+                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Eficiencia Global</div>
+                        <div class="text-xl font-black text-emerald-400 mt-1" id="kpi-eficiencia">94.2%</div>
+                    </div>
+                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Producto Conforme</div>
+                        <div class="text-xl font-black text-amber-500 mt-1" id="kpi-conforme">0.0 t/h</div>
+                    </div>
+                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Rechazo / Cola</div>
+                        <div class="text-xl font-black text-red-400 mt-1" id="kpi-rechazo">0.0 t/h</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
