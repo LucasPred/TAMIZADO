@@ -2,137 +2,33 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔒 Sistema Restringido - Laboratorio de Tamizado Avanzado</title>
+    <title>🔒 Acceso Corporativo Restringido</title>
     <script src="https://tailwindcss.com"></script>
-    <script src="https://jsdelivr.net"></script>
-    <script src="https://cloudflare.com"></script>
-    <script src="https://cloudflare.com"></script>
-    <script src="https://unpkg.com"></script>
-    <style>
-        body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
-    </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen font-sans" oncontextmenu="return false;">
-
-    <!-- PANTALLA DE ACCESO RESTRINGIDO (LOGIN) -->
-    <div id="login-screen" class="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 px-4">
-        <div class="bg-slate-800/50 backdrop-blur-md p-8 rounded-2xl border border-slate-700/50 shadow-2xl max-w-md w-full text-center">
-            <div class="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
-                <i data-lucide="lock" class="w-8 h-8"></i>
-            </div>
-            <h1 class="text-2xl font-bold tracking-tight text-white mb-2">Acceso de Alta Dirección</h1>
-            <p class="text-slate-400 text-sm mb-6">Módulo de Simulación Analítica y Propiedad Intelectual Confidencial.</p>
-            <form id="login-form" class="space-y-4" onsubmit="handleLogin(event)">
-                <div>
-                    <input type="password" id="password-input" placeholder="Introducir Contraseña Clave" 
-                        class="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl focus:outline-none focus:border-amber-500 text-center tracking-widest text-white transition-all">
-                </div>
-                <div id="login-error" class="text-red-400 text-xs hidden font-medium">Contraseña incorrecta. Acceso denegado.</div>
-                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl transition-all shadow-lg shadow-amber-500/10 flex items-center justify-center gap-2">
-                    <i data-lucide="shield-check" class="w-5 h-5"></i> Descifrar Laboratorio
-                </button>
-            </form>
-            <div class="mt-6 text-[10px] text-slate-500 tracking-wider uppercase">Capa de Seguridad SHA-256</div>
-        </div>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center px-4">
+    <div class="bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-2xl max-w-md w-full text-center">
+        <h1 class="text-2xl font-bold text-white mb-2">Acceso de Alta Dirección</h1>
+        <p class="text-slate-400 text-xs mb-6">Propiedad Intelectual Confidencial de la Compañía</p>
+        <form onsubmit="handleLogin(event)" class="space-y-4">
+            <input type="password" id="password-input" placeholder="Contraseña Clave" class="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-center text-white focus:outline-none">
+            <div id="login-error" class="text-red-400 text-xs hidden">Contraseña incorrecta. Acceso denegado.</div>
+            <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl">Entrar al Laboratorio</button>
+        </form>
     </div>
-
-    <!-- CONTENEDOR PRINCIPAL DE LA APLICACIÓN -->
-    <div id="app-container" class="hidden"></div>
-
     <script>
-        lucide.createIcons();
-
-        document.addEventListener('keydown', function(e) {
-            if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) {
-                e.preventDefault(); return false;
-            }
-        });
-
-        // Contraseña: Directorio2026
-        const targetHash = "96cb71116ec7263595b119dc9469502b4fc32dd32669e2c608f3316ba488fb24";
-
-        async function sha256(message) {
-            const msgBuffer = new TextEncoder().encode(message);                    
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
         async function handleLogin(e) {
             e.preventDefault();
-            const password = document.getElementById('password-input').value;
-            const inputHash = await sha256(password);
-
-            if (inputHash === targetHash) {
-                document.getElementById('login-screen').classList.add('hidden');
-                const appSlot = document.getElementById('app-container');
-                appSlot.classList.remove('hidden');
-                appSlot.innerHTML = getCoreDashboardHTML();
-                lucide.createIcons();
-                initSimulador();
+            const pass = document.getElementById('password-input').value;
+            const msgBuffer = new TextEncoder().encode(pass);                    
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            if (hash === "96cb71116ec7263595b119dc9469502b4fc32dd32669e2c608f3316ba488fb24") {
+                window.location.href = "laboratorio.html";
             } else {
-                const error = document.getElementById('login-error');
-                error.classList.remove('hidden');
-                document.getElementById('password-input').classList.add('border-red-500');
+                document.getElementById('login-error').classList.remove('hidden');
             }
         }
-
-        function getCoreDashboardHTML() {
-            return `
-            <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50 px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <div class="flex items-center gap-2 text-amber-500 font-bold uppercase tracking-wider text-xs mb-1">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Inteligencia Operacional Activa
-                    </div>
-                    <h1 class="text-xl font-bold text-white tracking-tight">Laboratorio Virtual de Tamizado de Arenas Especiales</h1>
-                </div>
-                <div class="flex items-center gap-3">
-                    <button onclick="exportarReportePDF()" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-amber-500/10 text-sm">
-                        <i data-lucide="file-text" class="w-4 h-4"></i> Exportar a PDF de Directorio
-                    </button>
-                    <button onclick="window.location.reload()" class="bg-slate-800 hover:bg-slate-750 text-slate-300 px-4 py-2.5 rounded-xl transition-all border border-slate-700 text-sm flex items-center gap-2">
-                        <i data-lucide="log-out" class="w-4 h-4"></i> Cerrar Sesión Segura
-                    </button>
-                </div>
-            </header>
-
-            <main class="p-6 space-y-6 max-w-[1600px] mx-auto" id="reporte-contenido">
-                <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-5">
-                        <h2 class="text-base font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
-                            <i data-lucide="sliders" class="text-amber-500 w-5 h-5"></i> 1. Parámetros de Carga Inicial
-                        </h2>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Materia Prima Base</label>
-                            <select id="materia-prima" onchange="actualizarGranulometriaBase()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
-                                <option value="resina">Arena P/ Frac_Hidráulico (Premium Fina)</option>
-                                <option value="fundicion">Arena P/ Fundición Gris (Media)</option>
-                                <option value="construccion">Arena Especial Sílice Alta Pureza (Gruesa)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Caudal de Ingreso (Toneladas / Hora)</label>
-                            <div class="flex items-center gap-4">
-                                <input type="range" id="caudal-input" min="5" max="100" value="40" oninput="calcularModelo()" class="w-full accent-amber-500">
-                                <span class="text-lg font-bold text-amber-500 w-16 text-right" id="caudal-val">40 t/h</span>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Configuración Mecánica de la Zaranda</label>
-                            <select id="pisos-select" onchange="alternarPisosVisibles()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
-                                <option value="2">Zaranda de 2 Pisos (Estándar)</option>
-                                <option value="3">Zaranda de 3 Pisos (Clasificación Avanzada)</option>
-                            </select>
-                        </div>
-                        <div class="pt-2 space-y-3">
-                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Configuración de Tramos por Piso</h3>
-                            <div id="piso1-card" class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
-                                <div class="flex justify-between text-xs font-bold text-slate-300"><span>PISO 1 (Superior - Corte Grueso)</span></div>
-                                <div class="grid grid-cols-2 gap-2 text-xs">
-                                    <div><label class="text-[10px] text-slate-500">Tramo A</label><select id="p1-m1" onchange="calcularModelo()" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-white focus:outline-none"></select></div>
-                                    <div><label class="text-[10px] text-slate-500">Tramo B</label><select id="p1-m2" onchange="calcularModelo()" class="w-full bg-slate-950 border border-slate-700 rounded p-1 text-white focus:outline-none"></select></div>
-                                </div>
-                            </div>
-                            <div id="piso2-card" class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
-                                <div class="flex justify-between text-xs font-bold text-slate-300"><span>PISO 2 (Intermedio)</span></div>
+    </script>
+</body>
+</html>
