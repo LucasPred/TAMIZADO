@@ -62,7 +62,10 @@ function alternarPisosVisibles() {
 }
 
 function actualizarGranulometriaBase() { 
-    function calcularModelo() {
+    calcularModelo(); 
+}
+
+function calcularModelo() {
     const caudalElem = document.getElementById('caudal-input');
     const caudal = caudalElem ? parseFloat(caudalElem.value) : 50;
     const caudalVal = document.getElementById('caudal-val');
@@ -236,5 +239,3 @@ async function exportarReportePDF() {
 }
 
 window.onload = initSimulador;
-    calcularModelo(); 
-}
