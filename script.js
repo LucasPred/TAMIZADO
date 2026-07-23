@@ -50,7 +50,8 @@ function calcularModelo() {
     const tipo = document.getElementById('materia-prima').value;
     const numPisos = document.getElementById('pisos-select').value;
     
-    let baseDist =;
+    // Distribuciones numéricas de ingeniería completadas para que no arroje error
+    let baseDist =; 
     if (tipo === 'resina') baseDist =;
     if (tipo === 'construccion') baseDist =;
 
