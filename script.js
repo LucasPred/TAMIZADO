@@ -50,9 +50,9 @@ function calcularModelo() {
     const tipo = document.getElementById('materia-prima').value;
     const numPisos = document.getElementById('pisos-select').value;
     
-    let baseDist = [5, 15, 40, 30, 10];
-    if (tipo === 'resina') baseDist = [2, 8, 25, 45, 20];
-    if (tipo === 'construccion') baseDist = [20, 35, 30, 10, 5];
+    let baseDist =;
+    if (tipo === 'resina') baseDist =;
+    if (tipo === 'construccion') baseDist =;
 
     let factor = numPisos === "3" ? 1.05 : 1.0;
     const m1 = catálogoMallas.find(m => m.id === document.getElementById('p1-m1').value).abertura;
