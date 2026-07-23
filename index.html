@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🔒 Sistema Restringido - Acceso Corporativo</title>
-    <!-- Tailwind CSS para diseño institucional -->
     <script src="https://tailwindcss.com"></script>
-    <!-- Lucide Icons para interfaz profesional -->
     <script src="https://unpkg.com"></script>
     <style>
         body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
@@ -37,15 +35,12 @@
     <script>
         lucide.createIcons();
 
-        // Bloqueo estricto de teclas de inspección de código (F12, Ctrl+Shift+I, etc.)
         document.addEventListener('keydown', function(e) {
             if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) {
-                e.preventDefault();
-                return false;
+                e.preventDefault(); return false;
             }
         });
 
-        // Contraseña configurada de fábrica: Directorio2026
         const targetHash = "96cb71116ec7263595b119dc9469502b4fc32dd32669e2c608f3316ba488fb24";
 
         async function sha256(message) {
@@ -61,7 +56,6 @@
             const inputHash = await sha256(password);
 
             if (inputHash === targetHash) {
-                // Redirección directa y segura al laboratorio analítico en la web
                 window.location.href = "laboratorio.html";
             } else {
                 const error = document.getElementById('login-error');
