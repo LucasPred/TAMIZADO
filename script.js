@@ -63,4 +63,178 @@ function alternarPisosVisibles() {
 
 function actualizarGranulometriaBase() { 
     calcularModelo(); 
+    function calcularModelo() {
+    const caudalElem = document.getElementById('caudal-input');
+    const caudal = caudalElem ? parseFloat(caudalElem.value) : 50;
+    const caudalVal = document.getElementById('caudal-val');
+    if(caudalVal) caudalVal.textContent = caudal + ' t/h';
+
+    const tipoMateriaElem = document.getElementById('materia-prima');
+    const tipoMateria = tipoMateriaElem ? tipoMateriaElem.value : 'construccion';
+    const numPisosElem = document.getElementById('pisos-select');
+    const numPisos = numPisosElem ? numPisosElem.value : '2';
+    
+    let baseDist = [15, 25, 30, 20, 10]; 
+    if (tipoMateria === 'resina') baseDist = [10, 20, 35, 25, 10];
+    if (tipoMateria === 'construccion') baseDist = [20, 25, 25, 20, 10];
+
+    let eficienciaFactor = numPisos === "3" ? 1.05 : 1.0;
+    
+    const m1Select = document.getElementById('p1-m1');
+    const m2Select = document.getElementById('p1-m2');
+    
+    const m1Obj = m1Select ? catálogoMallas.find(m => m.id === m1Select.value) : catálogoMallas[0];
+    const m2Obj = m2Select ? catálogoMallas.find(m => m.id === m2Select.value) : catálogoMallas[1];
+    
+    const m1 = m1Obj ? m1Obj.abertura : 2.0;
+    const m2 = m2Obj ? m2Obj.abertura : 1.18;
+
+    const efBase = Math.max(55, 96 - (Math.abs(m1 - m2) * 15));
+    const eficienciaCalculada = Math.min(100, efBase * eficienciaFactor).toFixed(1);
+
+    const conformeVal = (caudal * (baseDist[2] + baseDist[3]) / 100 * (eficienciaCalculada / 100)).toFixed(1);
+    const rejectVal = (caudal - parseFloat(conformeVal)).toFixed(1);
+
+    const kpiEficiencia = document.getElementById('kpi-eficiencia');
+    const kpiConforme = document.getElementById('kpi-conforme');
+    const kpiRechazo = document.getElementById('kpi-rechazo');
+
+    if(kpiEficiencia) kpiEficiencia.textContent = eficienciaCalculada + '%';
+    if(kpiConforme) kpiConforme.textContent = conformeVal + ' t/h';
+    if(kpiRechazo) kpiRechazo.textContent = rejectVal + ' t/h';
+
+    renderizarGrafico(baseDist, baseDist.map(v => Math.round(v * (eficienciaCalculada / 100))));
+}
+
+function renderizarGrafico(teorico, real) {
+    const canvasCtx = document.getElementById('chart-granulometria');
+    if (!canvasCtx) return;
+    const ctx = canvasCtx.getContext('2d');
+    if (granulometriaChart) granulometriaChart.destroy();
+    
+    granulometriaChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['> 2.0mm', '1.18-2.0mm', '0.60-1.18mm', '0.30-0.60mm', '< 0.30mm'],
+            datasets: [
+                { label: 'Teórico (%)', data: teorico, backgroundColor: 'rgba(71, 85, 105, 0.4)', borderColor: 'rgba(148, 163, 184, 0.8)', borderWidth: 1.5 },
+                { label: 'Real (%)', data: real, backgroundColor: '#f59e0b', borderColor: '#f59e0b', borderWidth: 1.5 }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#94a3b8' } } },
+            scales: {
+                y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', callback: v => v + '%' } },
+                x: { ticks: { color: '#94a3b8' } }
+            }
+        }
+    });
+}
+
+function iniciarMotorCinético() {
+    const container = document.getElementById('simulador-camara');
+    if(!container) return;
+
+    let canvas = document.getElementById('canvas-zaranda');
+    if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.id = "canvas-zaranda";
+        canvas.className = "w-full h-full absolute inset-0 rounded-xl pointer-events-none";
+        container.innerHTML = '';
+        container.appendChild(canvas);
+        container.classList.add('relative', 'bg-slate-950', 'border', 'border-slate-800');
+    }
+
+    const ctx = canvas.getContext('2d');
+    function resize() { 
+        canvas.width = container.clientWidth; 
+        canvas.height = container.clientHeight; 
+    }
+    resize(); 
+    window.addEventListener('resize', resize);
+
+    function animar() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const caudalElem = document.getElementById('caudal-input');
+        const frecuencia = caudalElem ? parseFloat(caudalElem.value) / 15 : 3; 
+        const amplitud = 3; 
+        const numPisosElem = document.getElementById('pisos-select');
+        const numPisos = numPisosElem ? parseInt(numPisosElem.value) : 2;
+
+        ctx.strokeStyle = 'rgba(51, 65, 85, 0.5)'; 
+        ctx.lineWidth = 4;
+        for(let p = 0; p < numPisos; p++) {
+            let yH = 40 + (p * 45);
+            ctx.beginPath(); 
+            ctx.moveTo(10, yH); 
+            ctx.lineTo(canvas.width - 10, yH + 15); 
+            ctx.stroke();
+        }
+
+        if (Math.random() < (frecuencia * 0.2) && particulas.length < 180) {
+            particulas.push({ 
+                x: 20 + Math.random() * 30, 
+                y: 10, 
+                vx: 1.5 + Math.random() * 1.5, 
+                vy: 0, 
+                size: Math.random() * 4 + 1.5, 
+                color: Math.random() > 0.4 ? '#f59e0b' : '#64748b' 
+            });
+        }
+
+        for (let i = particulas.length - 1; i >= 0; i--) {
+            let p = particulas[i];
+            let vibracionY = Math.sin(Date.now() * 0.02 * frecuencia) * amplitud;
+            p.vy += 0.18; 
+            p.x += p.vx; 
+            p.y += p.vy + vibracionY * 0.1;
+
+            for(let level = 0; level < numPisos; level++) {
+                let pisoY = 40 + (level * 45) + ((p.x / canvas.width) * 15);
+                if (p.y >= pisoY - 3 && p.y <= pisoY + 5 && p.size > (4 - level)) {
+                    p.y = pisoY - 2; 
+                    p.vy = -Math.abs(p.vy) * 0.3;
+                }
+            }
+            ctx.beginPath(); 
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); 
+            ctx.fillStyle = p.color; 
+            ctx.fill();
+            if (p.x > canvas.width || p.y > canvas.height) particulas.splice(i, 1);
+        }
+        animationFrameId = requestAnimationFrame(animar);
+    }
+    
+    if(animationFrameId) cancelAnimationFrame(animationFrameId);
+    animar();
+}
+
+function tomarFotografiaMuestra() {
+    const h = document.getElementById('historial-muestras');
+    const kpiEficiencia = document.getElementById('kpi-eficiencia');
+    if (h && kpiEficiencia) {
+        if (h.innerHTML.includes('Sin muestras')) h.innerHTML = '';
+        h.innerHTML = `<div class="p-2 bg-slate-950 rounded border border-slate-800 flex justify-between tracking-tight"><span>[${new Date().toLocaleTimeString()}] Muestra Sílice</span><span class="text-emerald-400 font-bold">${kpiEficiencia.textContent}</span></div>` + h.innerHTML;
+    }
+}
+
+async function exportarReportePDF() {
+    const { jsPDF } = window.jspdf; 
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const btn = document.querySelector('button[onclick="exportarReportePDF()"]');
+    if(btn) btn.textContent = "Procesando...";
+    
+    const contenido = document.getElementById('reporte-contenido');
+    if(contenido) {
+        await html2canvas(contenido, { scale: 1.5, backgroundColor: '#020617' }).then(canvas => {
+            doc.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 210, (canvas.height * 210) / canvas.width); 
+            doc.save('Reporte_Alta_Direccion.pdf');
+        });
+    }
+    if(btn) btn.textContent = "Exportar PDF";
+}
+
+window.onload = initSimulador;
 }
