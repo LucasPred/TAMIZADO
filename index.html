@@ -1,34 +1,212 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="dark">
 <head>
     <meta charset="UTF-8">
-    <title>🔒 Acceso Corporativo Restringido</title>
-    <script src="https://tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAMIZADO 3.0 | Ingeniería y Simulación de Zarandas Industriales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .glass-panel { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(16px); border: 1px solid rgba(51, 65, 85, 0.4); }
+    </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center px-4">
-    <div class="bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-2xl max-w-md w-full text-center">
-        <h1 class="text-2xl font-bold text-white mb-2">Acceso de Alta Dirección</h1>
-        <p class="text-slate-400 text-xs mb-6">Propiedad Intelectual Confidencial de la Compañía</p>
-        
-        <!-- Bloqueo estricto de autocompletado -->
-        <div class="space-y-4">
-            <input type="text" id="password-input" placeholder="Contraseña Clave" autocomplete="off" class="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-center text-white focus:outline-none">
-            <div id="login-error" class="text-red-400 text-xs hidden">Contraseña incorrecta. Acceso denegado.</div>
-            <button type="button" onclick="verificarClave()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl">Entrar al Laboratorio</button>
-        </div>
-    </div>
+<body class="bg-[#020617] text-slate-100 min-h-screen flex flex-col selection:bg-amber-500 selection:text-slate-950">
 
-    <script>
-        function verificarClave() {
-            const pass = document.getElementById('password-input').value;
-            
-            // Validación directa sin vueltas
-            if (pass === "Directorio2026") {
-                window.location.href = "laboratorio.html";
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-            }
-        }
-    </script>
+    <!-- HEADER / BARRA SUPERIOR -->
+    <header class="border-b border-slate-800/80 glass-panel sticky top-0 z-50 px-6 py-4 flex flex-wrap justify-between items-center gap-4">
+        <div class="flex items-center space-x-3">
+            <div class="w-3 h-3 bg-amber-500 rounded-full animate-pulse shadow-[0_0_12px_rgba(245,158,11,0.6)]"></div>
+            <h1 class="text-lg font-extrabold tracking-wider bg-gradient-to-r from-white via-slate-200 to-amber-500 bg-clip-text text-transparent">
+                TECMAQ <span class="text-amber-500 font-light">| TAMIZADO 3.0</span>
+            </h1>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="tomarFotografiaMuestra()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded-xl text-xs font-semibold text-slate-200 transition-all flex items-center gap-2 shadow-sm">
+                <span>📸 Capturar Muestra</span>
+            </button>
+            <button onclick="exportarReportePDF()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-[0_4px_20px_rgba(245,158,11,0.25)]">
+                📄 Exportar Reporte Ejecutivo
+            </button>
+        </div>
+    </header>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <main class="flex-1 p-6 max-w-[1600px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6" id="reporte-contenido">
+
+        <!-- PANEL IZQUIERDO: CONTROLES TÉCNICOS & VARIABLES -->
+        <section class="lg:col-span-4 space-y-6">
+            <div class="glass-panel p-6 rounded-2xl shadow-xl space-y-5">
+                <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
+                    <h2 class="text-sm font-bold tracking-wide uppercase text-amber-500 flex items-center gap-2">
+                        <span>⚙️ Parámetros de Operación</span>
+                    </h2>
+                    <span class="text-[10px] font-mono bg-slate-800 px-2 py-1 rounded text-slate-400">ISO 3310 / ASTM E11</span>
+                </div>
+
+                <!-- Caudal -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400 font-medium">Caudal de Alimentación:</span>
+                        <span id="caudal-val" class="font-mono font-bold text-amber-500">50 t/h</span>
+                    </div>
+                    <input type="range" id="caudal-input" min="10" max="150" value="50" step="5" 
+                           oninput="actualizarGranulometriaBase()" 
+                           class="w-full accent-amber-500 bg-slate-800 h-2 rounded-lg cursor-pointer">
+                </div>
+
+                <!-- Materia Prima -->
+                <div class="space-y-2">
+                    <label class="text-xs text-slate-400 font-medium block">Mineralogía / Materia Prima:</label>
+                    <select id="materia-prima" onchange="actualizarGranulometriaBase()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 transition-colors">
+                        <option value="construccion">Arena de Río / Construcción General</option>
+                        <option value="resina">Sílice Industrial para Resinas (Alta Pureza)</option>
+                        <option value="frac">Arena de Fractura (Vaca Muerta / Frac Sand)</option>
+                    </select>
+                </div>
+
+                <!-- Configuración de Pisos -->
+                <div class="space-y-2">
+                    <label class="text-xs text-slate-400 font-medium block">Cubiertas de Zaranda Activas:</label>
+                    <select id="pisos-select" onchange="alternarPisosVisibles()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 transition-colors">
+                        <option value="2">Configuración 2 Pisos (Doble Cubierta)</option>
+                        <option value="3" selected>Configuración 3 Pisos (Triple Cubierta Alta Resolución)</option>
+                    </select>
+                </div>
+
+                <!-- Selección de Mallas por Piso -->
+                <div class="space-y-4 pt-2 border-t border-slate-800/80">
+                    <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Selección de Mallas Técnicas</h3>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[11px] text-slate-400">Piso 1 - Superior</label>
+                            <select id="p1-m1" onchange="calcularModelo()" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-slate-200"></select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[11px] text-slate-400">Auxiliar Superior</label>
+                            <select id="p1-m2" onchange="calcularModelo()" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-slate-200"></select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[11px] text-slate-400">Piso 2 - Intermedio</label>
+                            <select id="p2-m1" onchange="calcularModelo()" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-slate-200"></select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[11px] text-slate-400">Auxiliar Intermedio</label>
+                            <select id="p2-m2" onchange="calcularModelo()" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-slate-200"></select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3" id="piso3-card">
+                        <div class="space-y-1">
+                            <label class="text-[11px] text-slate-400">Piso 3 - Inferior (Finos)</label>
+                            <select id="p3-m1" onchange="calcularModelo()" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-slate-200"></select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[11px] text-slate-400">Auxiliar Inferior</label>
+                            <select id="p3-m2" onchange="calcularModelo()" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-slate-200"></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HISTORIAL DE MUESTRAS CAPTURADAS -->
+            <div class="glass-panel p-5 rounded-2xl shadow-xl space-y-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Historial de Muestras Registradas</h3>
+                <div id="historial-muestras" class="space-y-2 max-h-40 overflow-y-auto text-xs text-slate-400 font-mono">
+                    <p class="text-slate-600 italic">Sin muestras capturadas en esta sesión.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PANEL CENTRAL Y DERECHO: VISUALIZACIÓN DE ALTA GAMA (ZARANDA ANIMADA & KPIS) -->
+        <section class="lg:col-span-8 space-y-6 flex flex-col">
+
+            <!-- BLOQUE PROTAGONISTA: SIMULADOR CINÉTICO DE ZARANDA RECTANGULAR TECMAQ -->
+            <div class="glass-panel p-6 rounded-2xl shadow-2xl flex flex-col space-y-4 flex-1 min-h-[420px]">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-amber-500">Simulación Cinética en Tiempo Real - Zaranda TECMAQ</h2>
+                        <p class="text-xs text-slate-400">Emulación física multi-estrato de vibración armónica, separación granulométrica y rebote de partículas.</p>
+                    </div>
+                    <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-[10px] font-mono font-bold animate-pulse">● MOTOR ACTIVO</span>
+                </div>
+
+                <!-- Cámara de Simulación (Canvas de Partículas) -->
+                <div id="simulador-camara" class="w-full flex-1 min-h-[340px] rounded-xl relative overflow-hidden bg-slate-950 border border-slate-800/80 shadow-inner">
+                    <!-- El motor JS inyecta dinámicamente el canvas animado aquí -->
+                </div>
+            </div>
+
+            <!-- PANEL DE KPIS E INDICADORES DE RENDIMIENTO -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="glass-panel p-5 rounded-2xl border-l-4 border-l-amber-500 shadow-xl">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Eficiencia de Separación</span>
+                    <span id="kpi-eficiencia" class="text-2xl font-extrabold font-mono text-white mt-1 block">--%</span>
+                    <span class="text-[10px] text-emerald-400 font-medium mt-1 block">Optimizado bajo norma ASTM E11</span>
+                </div>
+                <div class="glass-panel p-5 rounded-2xl border-l-4 border-l-emerald-500 shadow-xl">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Caudal Conforme (Comercial)</span>
+                    <span id="kpi-conforme" class="text-2xl font-extrabold font-mono text-emerald-400 mt-1 block">-- t/h</span>
+                    <span class="text-[10px] text-slate-400 font-medium mt-1 block">Producto bajo especificación</span>
+                </div>
+                <div class="glass-panel p-5 rounded-2xl border-l-4 border-l-rose-500 shadow-xl">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Caudal de Rechazo / Oversize</span>
+                    <span id="kpi-rechazo" class="text-2xl font-extrabold font-mono text-rose-400 mt-1 block">-- t/h</span>
+                    <span class="text-[10px] text-slate-400 font-medium mt-1 block">Retenido en desbaste superior</span>
+                </div>
+            </div>
+
+            <!-- GRÁFICO GRANULOMÉTRICO -->
+            <div class="glass-panel p-6 rounded-2xl shadow-xl space-y-4">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Curva Granulométrica Comparativa (Teórica vs. Real Obtenida)</h3>
+                <div class="h-64 w-full relative">
+                    <canvas id="chart-granulometria"></canvas>
+                </div>
+            </div>
+
+            <!-- CATÁLOGO TÉCNICO Y MITIGACIÓN DE CEGAMIENTO -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Tabla de Mallas -->
+                <div class="glass-panel p-5 rounded-2xl shadow-xl space-y-3 overflow-x-auto">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-amber-500">Catálogo Técnico de Mallas</h3>
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400">
+                                <th class="p-2">ID</th>
+                                <th class="p-2">Abertura</th>
+                                <th class="p-2">Hilo</th>
+                                <th class="p-2">Material</th>
+                                <th class="p-2">Área %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-mallas-body" class="divide-y divide-slate-800/50"></tbody>
+                    </table>
+                </div>
+
+                <!-- Mapeo de Problemas y Soluciones -->
+                <div class="glass-panel p-5 rounded-2xl shadow-xl space-y-3">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-amber-500">Mitigación de Cegamiento y Desgaste</h3>
+                    <div id="mapeo-problemas" class="space-y-3"></div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- FOOTER INSTITUCIONAL -->
+    <footer class="border-t border-slate-800/80 py-6 text-center text-xs text-slate-500 glass-panel mt-12">
+        <p>TECMAQ Industrial Systems &copy; 2026 — Plataforma de Simulación Avanzada para Arenas Especiales y Áridos.</p>
+    </footer>
+
+    <!-- SCRIPT PRINCIPAL DE SIMULACIÓN -->
+    <script src="script.js"></script>
 </body>
 </html>
