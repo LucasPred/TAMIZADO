@@ -29,8 +29,8 @@
             <a href="index.html" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded-xl text-xs font-semibold text-slate-200 transition-all flex items-center gap-2">
                 <span>← Volver al Simulador de Planta</span>
             </a>
-            <button id="btn-pdf" onclick="exportarReportePDFLab()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-[0_4px_20px_rgba(245,158,11,0.25)] flex items-center gap-2">
-                <span>📄 Reporte PDF para Directorio</span>
+            <button id="btn-pdf" onclick="exportarReportePDFMultihoja()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-[0_4px_20px_rgba(245,158,11,0.25)] flex items-center gap-2">
+                <span>📄 Reporte PDF Multihoja (Directorio)</span>
             </button>
         </div>
     </header>
@@ -38,8 +38,8 @@
     <!-- CONTENIDO PRINCIPAL A CAPTURAR EN PDF -->
     <main class="flex-1 p-6 max-w-[1700px] w-full mx-auto grid grid-cols-1 xl:grid-cols-12 gap-6" id="reporte-laboratorio-contenido">
 
-        <!-- COLUMNA IZQUIERDA: VARIABLES DE ARENA DE RÍO & SILOS DE DECANTACIÓN -->
-        <section class="xl:col-span-5 space-y-6">
+        <!-- BLOQUE 1: VARIABLES DE ARENA DE RÍO & SILOS DE DECANTACIÓN -->
+        <section class="xl:col-span-5 space-y-6 pdf-seccion" id="seccion-variables">
             <div class="glass-panel p-6 rounded-2xl shadow-2xl space-y-5">
                 <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
                     <h2 class="text-sm font-bold tracking-wide uppercase text-amber-500 flex items-center gap-2">
@@ -128,11 +128,11 @@
             </div>
         </section>
 
-        <!-- COLUMNA DERECHA: RESULTADOS ESPERADOS, HISTORIAL Y PLANIFICACIÓN DE VENTAS -->
+        <!-- BLOQUE 2: PLANIFICACIÓN, HISTORIAL Y GRÁFICO -->
         <section class="xl:col-span-7 space-y-6">
 
             <!-- PLANIFICACIÓN DE PRODUCCIÓN Y RENDIMIENTOS COMPROMETIDOS -->
-            <div class="glass-panel p-6 rounded-2xl shadow-2xl space-y-5">
+            <div class="glass-panel p-6 rounded-2xl shadow-2xl space-y-5 pdf-seccion" id="seccion-planificacion">
                 <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                     <div>
                         <h2 class="text-sm font-bold uppercase tracking-wider text-amber-500">Planificación de Producción y Mallas Optimizadas</h2>
@@ -190,7 +190,7 @@
             </div>
 
             <!-- HISTORIAL DE MUESTRAS REGISTRADAS -->
-            <div class="glass-panel p-6 rounded-2xl shadow-xl space-y-3">
+            <div class="glass-panel p-6 rounded-2xl shadow-xl space-y-3 pdf-seccion" id="seccion-historial">
                 <div class="flex justify-between items-center border-b border-slate-800 pb-2">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Historial de Muestras Registradas (Laboratorio)</h3>
                     <span id="contador-muestras" class="text-[10px] font-mono text-amber-500">0 Registros</span>
@@ -201,7 +201,7 @@
             </div>
 
             <!-- GRÁFICO DE CURVA GRANULOMÉTRICA DE INGRESO -->
-            <div class="glass-panel p-6 rounded-2xl shadow-xl space-y-4">
+            <div class="glass-panel p-6 rounded-2xl shadow-xl space-y-4 pdf-seccion" id="seccion-grafico">
                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Curva Granulométrica Acumulada de Arena de Río (Post-Decantación)</h3>
                 <div class="h-64 w-full relative">
                     <canvas id="chart-laboratorio"></canvas>
@@ -216,7 +216,7 @@
         <p>GRAVAFILT S.A. &copy; 2026 — Módulo de Ingeniería Fluvial y Silos de Decantación.</p>
     </footer>
 
-    <!-- SCRIPT DE LABORATORIO E HISTORIAL/PDF -->
+    <!-- SCRIPT DE LABORATORIO Y PDF MULTIHOJA -->
     <script>
         let labChart = null;
         let historialMuestras = [];
@@ -333,61 +333,72 @@
             window.location.href = 'index.html';
         }
 
-        async function exportarReportePDFLab() {
+        async function exportarReportePDFMultihoja() {
             const { jsPDF } = window.jspdf;
-            const elemento = document.getElementById('reporte-laboratorio-contenido');
             const btnPdf = document.getElementById('btn-pdf');
             
-            btnPdf.innerHTML = '<span>⏳ Generando PDF Completo...</span>';
+            btnPdf.innerHTML = '<span>⏳ Generando PDF en Multihojas...</span>';
             btnPdf.disabled = true;
 
-            // Ajuste temporal de contenedores con scroll para asegurar captura total
-            const contenedoresScroll = elemento.querySelectorAll('#historial-muestras-lab');
-            const alturasOriginales = [];
-            contenedoresScroll.forEach(c => {
-                alturasOriginales.push(c.style.maxHeight);
-                c.style.maxHeight = 'none';
-                c.style.overflow = 'visible';
-            });
-
             try {
-                const canvas = await html2canvas(elemento, {
-                    scale: 2,
-                    useCORS: true,
-                    backgroundColor: '#020617',
-                    windowWidth: 1600
-                });
-
-                const imgData = canvas.toDataURL('image/png');
                 const pdf = new jsPDF('landscape', 'mm', 'a4');
                 const pdfWidth = pdf.internal.pageSize.getWidth();
                 const pdfHeight = pdf.internal.pageSize.getHeight();
                 
-                let imgHeight = (canvas.height * pdfWidth) / canvas.width;
-                let heightLeft = imgHeight;
-                let position = 10;
+                const secciones = document.querySelectorAll('.pdf-seccion');
+                
+                for (let i = 0; i < secciones.length; i++) {
+                    const seccion = secciones[i];
+                    
+                    // Asegurar expansión temporal de scroll si aplica
+                    const contenedorScroll = seccion.querySelector('#historial-muestras-lab');
+                    let alturaOriginal = '';
+                    if (contenedorScroll) {
+                        alturaOriginal = contenedorScroll.style.maxHeight;
+                        contenedorScroll.style.maxHeight = 'none';
+                        contenedorScroll.style.overflow = 'visible';
+                    }
 
-                pdf.addImage(imgData, 'PNG', 10, position, pdfWidth - 20, imgHeight);
-                heightLeft -= (pdfHeight - 20);
+                    const canvas = await html2canvas(seccion, {
+                        scale: 2,
+                        useCORS: true,
+                        backgroundColor: '#020617',
+                        windowWidth: 1400
+                    });
 
-                while (heightLeft >= 0) {
-                    position = heightLeft - imgHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 10, position, pdfWidth - 20, imgHeight);
-                    heightLeft -= pdfHeight;
+                    if (contenedorScroll) {
+                        contenedorScroll.style.maxHeight = alturaOriginal;
+                        contenedorScroll.style.overflow = 'y-auto';
+                    }
+
+                    const imgData = canvas.toDataURL('image/png');
+                    const imgHeight = (canvas.height * (pdfWidth - 20)) / canvas.width;
+
+                    if (i > 0) {
+                        pdf.addPage();
+                    }
+
+                    // Título de página / membrete ejecutivo
+                    pdf.setFont("helvetica", "bold");
+                    pdf.setFontSize(11);
+                    pdf.setTextColor(245, 158, 11);
+                    pdf.text("GRAVAFILT S.A. | REPORTE EJECUTIVO DE LABORATORIO", 10, 10);
+                    
+                    pdf.setFont("helvetica", "normal");
+                    pdf.setFontSize(8);
+                    pdf.setTextColor(148, 163, 184);
+                    pdf.text(`Sección ${i + 1} de ${secciones.length} — Fecha: ${new Date().toLocaleDateString()}`, 10, 15);
+
+                    // Insertar imagen del bloque adaptada a la hoja
+                    pdf.addImage(imgData, 'PNG', 10, 20, pdfWidth - 20, Math.min(imgHeight, pdfHeight - 30));
                 }
 
-                pdf.save('GRAVAFILT-Reporte-Laboratorio-Directorio.pdf');
+                pdf.save('GRAVAFILT-Reporte-Laboratorio-Multihoja.pdf');
             } catch (error) {
                 console.error(error);
-                alert('Hubo un error al generar el archivo PDF.');
+                alert('Hubo un error al generar el archivo PDF multihoja.');
             } finally {
-                // Restaurar alturas originales de scroll
-                contenedoresScroll.forEach((c, index) => {
-                    c.style.maxHeight = alturasOriginales[index];
-                    c.style.overflow = 'y-auto';
-                });
-                btnPdf.innerHTML = '<span>📄 Reporte PDF para Directorio</span>';
+                btnPdf.innerHTML = '<span>📄 Reporte PDF Multihoja (Directorio)</span>';
                 btnPdf.disabled = false;
             }
         }
