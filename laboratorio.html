@@ -43,6 +43,16 @@
                     <span class="text-[10px] font-mono bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-slate-400">ASTM C136 / ISO 3310</span>
                 </div>
 
+                <!-- Caudal Real de Alimentación al Sector de Tamizado (tn/h) -->
+                <div class="p-4 bg-amber-500/10 rounded-xl border border-amber-500/30 space-y-2">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="font-bold text-amber-400 uppercase tracking-wider">Caudal de Ingreso a Tamizado:</span>
+                        <span id="caudal-planta-val" class="font-mono text-amber-400 text-sm font-extrabold">50.0 tn/h</span>
+                    </div>
+                    <input type="range" id="caudal-planta-input" min="10" max="150" value="50" step="5" oninput="actualizarSimulacionLab()" class="w-full accent-amber-500 bg-slate-950 h-2.5 rounded-lg cursor-pointer">
+                    <span class="text-[10px] text-slate-400 block italic">Tonelares reales ingresando por hora desde los silos de decantación hacia la línea de proceso.</span>
+                </div>
+
                 <!-- Selección de Banco Fluvial -->
                 <div class="space-y-2">
                     <label class="text-xs text-slate-400 font-medium block">Sector de Banco Fluvial (Extracción de Río):</label>
@@ -66,12 +76,12 @@
 
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-2">
-                            <label class="text-[11px] text-slate-400">Humedad Residual Post-Decantación (%):</label>
+                            <label class="text-[11px] text-slate-400">Humedad Residual (%):</label>
                             <input type="range" id="humedad-input" min="2" max="10" value="4.0" step="0.5" oninput="actualizarSimulacionLab()" class="w-full accent-amber-500 bg-slate-900 h-2 rounded-lg cursor-pointer">
                             <span id="humedad-val" class="text-xs font-mono font-bold text-amber-500">4.0%</span>
                         </div>
                         <div class="space-y-2">
-                            <label class="text-[11px] text-slate-400">Finos / Limos Residuales en Silo (%):</label>
+                            <label class="text-[11px] text-slate-400">Finos / Limos Residuales (%):</label>
                             <input type="range" id="arcilla-input" min="0.5" max="6" value="1.0" step="0.1" oninput="actualizarSimulacionLab()" class="w-full accent-amber-500 bg-slate-900 h-2 rounded-lg cursor-pointer">
                             <span id="arcilla-val" class="text-xs font-mono font-bold text-amber-500">1.0%</span>
                         </div>
@@ -114,7 +124,7 @@
                 <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                     <div>
                         <h2 class="text-sm font-bold uppercase tracking-wider text-amber-500">Planificación de Producción y Mallas Optimizadas</h2>
-                        <p class="text-xs text-slate-400">Ratios esperados a partir de arena de río decantada en silos para cumplir compromisos de venta.</p>
+                        <p class="text-xs text-slate-400">Ratios sincronizados con el caudal real de ingreso para cumplir compromisos de venta.</p>
                     </div>
                     <span class="px-3 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full text-xs font-mono font-bold">PLANIFICADOR ACTIVO</span>
                 </div>
@@ -127,7 +137,7 @@
                                 <th class="p-3">Fracción Comercial</th>
                                 <th class="p-3">Malla Recomendada (GRAVAFILT)</th>
                                 <th class="p-3">Rendimiento Esperado (%)</th>
-                                <th class="p-3">Volumen Programado (t/h)</th>
+                                <th class="p-3">Volumen Programado (tn/h)</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-800/50">
@@ -135,25 +145,25 @@
                                 <td class="p-3 font-bold text-white">Grueso / Desbaste (> 1.18 mm)</td>
                                 <td class="p-3 text-amber-500 font-mono">M01 (2.00mm) / M02 (1.18mm)</td>
                                 <td class="p-3 font-mono text-emerald-400" id="rend-1">15.0%</td>
-                                <td class="p-3 font-mono text-slate-200" id="vol-1">7.5 t/h</td>
+                                <td class="p-3 font-mono text-amber-400 font-bold" id="vol-1">7.5 tn/h</td>
                             </tr>
                             <tr class="hover:bg-slate-900/50">
                                 <td class="p-3 font-bold text-white">Medio / Comercial (0.60 - 1.18 mm)</td>
                                 <td class="p-3 text-amber-500 font-mono">M02 (1.18mm) / M03 (0.60mm)</td>
                                 <td class="p-3 font-mono text-emerald-400" id="rend-2">40.0%</td>
-                                <td class="p-3 font-mono text-slate-200" id="vol-2">20.0 t/h</td>
+                                <td class="p-3 font-mono text-amber-400 font-bold" id="vol-2">20.0 tn/h</td>
                             </tr>
                             <tr class="hover:bg-slate-900/50">
                                 <td class="p-3 font-bold text-white">Fino / Hormigones (0.30 - 0.60 mm)</td>
                                 <td class="p-3 text-amber-500 font-mono">M03 (0.60mm) / M04 (0.30mm)</td>
                                 <td class="p-3 font-mono text-emerald-400" id="rend-3">32.0%</td>
-                                <td class="p-3 font-mono text-slate-200" id="vol-3">16.0 t/h</td>
+                                <td class="p-3 font-mono text-amber-400 font-bold" id="vol-3">16.0 tn/h</td>
                             </tr>
                             <tr class="hover:bg-slate-900/50">
                                 <td class="p-3 font-bold text-white">Micro-Finos / Control (< 0.30 mm)</td>
                                 <td class="p-3 text-amber-500 font-mono">M04 (0.30mm) / M05 (0.15mm)</td>
                                 <td class="p-3 font-mono text-emerald-400" id="rend-4">13.0%</td>
-                                <td class="p-3 font-mono text-slate-200" id="vol-4">6.5 t/h</td>
+                                <td class="p-3 font-mono text-amber-400 font-bold" id="vol-4">6.5 tn/h</td>
                             </tr>
                         </tbody>
                     </table>
@@ -188,6 +198,9 @@
         let labChart = null;
 
         function actualizarSimulacionLab() {
+            const caudalPlanta = parseFloat(document.getElementById('caudal-planta-input').value) || 50;
+            document.getElementById('caudal-planta-val').textContent = caudalPlanta.toFixed(1) + ' tn/h';
+
             const horasSilo = parseFloat(document.getElementById('tiempo-silo-input').value);
             document.getElementById('tiempo-silo-val').textContent = horasSilo + ' Horas';
 
@@ -221,11 +234,11 @@
             document.getElementById('rend-3').textContent = p3 + '%';
             document.getElementById('rend-4').textContent = p4 + '%';
 
-            const caudalBase = 50; 
-            document.getElementById('vol-1').textContent = (caudalBase * p1 / 100).toFixed(1) + ' t/h';
-            document.getElementById('vol-2').textContent = (caudalBase * p2 / 100).toFixed(1) + ' t/h';
-            document.getElementById('vol-3').textContent = (caudalBase * p3 / 100).toFixed(1) + ' t/h';
-            document.getElementById('vol-4').textContent = (caudalBase * p4 / 100).toFixed(1) + ' t/h';
+            // Cálculo exacto de toneladas por hora según el caudal real ingresado
+            document.getElementById('vol-1').textContent = (caudalPlanta * p1 / 100).toFixed(1) + ' tn/h';
+            document.getElementById('vol-2').textContent = (caudalPlanta * p2 / 100).toFixed(1) + ' tn/h';
+            document.getElementById('vol-3').textContent = (caudalPlanta * p3 / 100).toFixed(1) + ' tn/h';
+            document.getElementById('vol-4').textContent = (caudalPlanta * p4 / 100).toFixed(1) + ' tn/h';
 
             renderizarGraficoLab([r236, r118, r060, r030, r015, rFondo]);
         }
@@ -258,7 +271,7 @@
         }
 
         function sincronizarConPlanta() {
-            alert('¡Parámetros de arena de río (decantada en silos) transferidos exitosamente a la planta GRAVAFILT 3.0!');
+            alert('¡Caudal de ingreso y parámetros granulométricos sincronizados con éxito hacia el simulador principal GRAVAFILT 3.0!');
             window.location.href = 'index.html';
         }
 
