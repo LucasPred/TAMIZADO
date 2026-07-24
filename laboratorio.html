@@ -29,7 +29,7 @@
             <a href="index.html" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded-xl text-xs font-semibold text-slate-200 transition-all flex items-center gap-2">
                 <span>← Volver al Simulador de Planta</span>
             </a>
-            <button onclick="exportarReportePDFLab()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-[0_4px_20px_rgba(245,158,11,0.25)] flex items-center gap-2">
+            <button id="btn-pdf" onclick="exportarReportePDFLab()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-[0_4px_20px_rgba(245,158,11,0.25)] flex items-center gap-2">
                 <span>📄 Reporte PDF para Directorio</span>
             </button>
         </div>
@@ -55,7 +55,7 @@
                         <span id="caudal-planta-val" class="font-mono text-amber-400 text-sm font-extrabold">50.0 tn/h</span>
                     </div>
                     <input type="range" id="caudal-planta-input" min="10" max="150" value="50" step="5" oninput="actualizarSimulacionLab()" class="w-full accent-amber-500 bg-slate-950 h-2.5 rounded-lg cursor-pointer">
-                    <span class="text-[10px] text-slate-400 block italic">Tonelares reales ingresando por hora desde los silos de decantación hacia la línea de proceso.</span>
+                    <span class="text-[10px] text-slate-400 block italic">Toneladas reales ingresando por hora desde los silos de decantación hacia la línea de proceso.</span>
                 </div>
 
                 <!-- Selección de Banco Fluvial -->
@@ -317,7 +317,7 @@
             }
 
             let html = '';
-            historialMuestras.forEach((m, index) => {
+            historialMuestras.forEach((m) => {
                 html += `<div class="p-2.5 bg-slate-900 border border-slate-800 rounded-lg flex justify-between items-center">
                     <div>
                         <span class="text-amber-400 font-bold">[${m.hora}]</span> <span class="text-slate-300">${m.caudal}</span> - FM: <span class="text-white">${m.fm}</span> | Cu: <span class="text-emerald-400">${m.cu}</span>
@@ -336,30 +336,59 @@
         async function exportarReportePDFLab() {
             const { jsPDF } = window.jspdf;
             const elemento = document.getElementById('reporte-laboratorio-contenido');
+            const btnPdf = document.getElementById('btn-pdf');
+            
+            btnPdf.innerHTML = '<span>⏳ Generando PDF Completo...</span>';
+            btnPdf.disabled = true;
 
-            // Feedback visual temporal
-            const btnOriginal = event.target.innerHTML;
-            event.target.innerHTML = '<span>⏳ Generando PDF Ejecutivo...</span>';
+            // Ajuste temporal de contenedores con scroll para asegurar captura total
+            const contenedoresScroll = elemento.querySelectorAll('#historial-muestras-lab');
+            const alturasOriginales = [];
+            contenedoresScroll.forEach(c => {
+                alturasOriginales.push(c.style.maxHeight);
+                c.style.maxHeight = 'none';
+                c.style.overflow = 'visible';
+            });
 
             try {
                 const canvas = await html2canvas(elemento, {
                     scale: 2,
                     useCORS: true,
-                    backgroundColor: '#020617'
+                    backgroundColor: '#020617',
+                    windowWidth: 1600
                 });
 
                 const imgData = canvas.toDataURL('image/png');
                 const pdf = new jsPDF('landscape', 'mm', 'a4');
                 const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                
+                let imgHeight = (canvas.height * pdfWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 10;
 
-                pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
+                pdf.addImage(imgData, 'PNG', 10, position, pdfWidth - 20, imgHeight);
+                heightLeft -= (pdfHeight - 20);
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 10, position, pdfWidth - 20, imgHeight);
+                    heightLeft -= pdfHeight;
+                }
+
                 pdf.save('GRAVAFILT-Reporte-Laboratorio-Directorio.pdf');
             } catch (error) {
                 console.error(error);
                 alert('Hubo un error al generar el archivo PDF.');
             } finally {
-                event.target.innerHTML = btnOriginal;
+                // Restaurar alturas originales de scroll
+                contenedoresScroll.forEach((c, index) => {
+                    c.style.maxHeight = alturasOriginales[index];
+                    c.style.overflow = 'y-auto';
+                });
+                btnPdf.innerHTML = '<span>📄 Reporte PDF para Directorio</span>';
+                btnPdf.disabled = false;
             }
         }
 
