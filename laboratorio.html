@@ -62,9 +62,9 @@
                 <div class="space-y-2">
                     <label class="text-xs text-slate-400 font-medium block">Sector de Banco Fluvial (Extracción de Río):</label>
                     <select id="banco-origen" onchange="actualizarSimulacionLab()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500 transition-colors">
-                        <option value="rio-principal">Canal Principal - Río Paraná (Arena Natural Lavada)</option>
-                        <option value="banco-arena">Banco Secundario de Acumulación (Granulometría Media)</option>
-                        <option value="delta-finos">Zona de Transición / Finos Naturales de Río</option>
+                        <option value="Canal Principal - Río Paraná (Arena Natural Lavada)">Canal Principal - Río Paraná (Arena Natural Lavada)</option>
+                        <option value="Banco Secundario de Acumulación (Granulometría Media)">Banco Secundario de Acumulación (Granulometría Media)</option>
+                        <option value="Zona de Transición / Finos Naturales de Río">Zona de Transición / Finos Naturales de Río</option>
                     </select>
                 </div>
 
@@ -119,16 +119,20 @@
                     </div>
                 </div>
 
-                <!-- Botón de Registro de Muestra en Historial -->
-                <div class="pt-2">
-                    <button onclick="registrarMuestraLaboratorio()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 border border-amber-500/50 text-amber-400 font-bold rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-2">
-                        <span>📌 Registrar Muestra Actual en Historial</span>
+                <!-- Botón de Registro de Muestra y Acceso al Historial Oculto -->
+                <div class="pt-2 flex gap-2">
+                    <button onclick="registrarMuestraLaboratorio()" class="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 border border-amber-500/50 text-amber-400 font-bold rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-2">
+                        <span>📌 Registrar Muestra Actual</span>
+                    </button>
+                    <button id="btn-toggle-historial" onclick="toggleCuadroHistorial()" class="px-4 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/50 text-amber-400 font-bold rounded-xl text-xs transition-all shadow-md flex items-center gap-1.5">
+                        <span>📋 Ver Historial</span>
+                        <span id="badge-contador-historial" class="bg-amber-500 text-slate-950 px-1.5 py-0.2 rounded-full text-[10px] font-mono">0</span>
                     </button>
                 </div>
             </div>
         </section>
 
-        <!-- BLOQUE 2: PLANIFICACIÓN, HISTORIAL Y GRÁFICO -->
+        <!-- BLOQUE 2: PLANIFICACIÓN, HISTORIAL OCULTO & GRÁFICO -->
         <section class="xl:col-span-7 space-y-6">
 
             <!-- PLANIFICACIÓN DE PRODUCCIÓN Y RENDIMIENTOS COMPROMETIDOS -->
@@ -189,13 +193,17 @@
                 </div>
             </div>
 
-            <!-- HISTORIAL DE MUESTRAS REGISTRADAS -->
-            <div class="glass-panel p-6 rounded-2xl shadow-xl space-y-3 pdf-seccion" id="seccion-historial">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Historial de Muestras Registradas (Laboratorio)</h3>
-                    <span id="contador-muestras" class="text-[10px] font-mono text-amber-500">0 Registros</span>
+            <!-- CUADRO OCULTO DE HISTORIAL COMPLETO DE VARIABLES DE LABORATORIO -->
+            <div id="contenedor-historial-oculto" class="glass-panel p-6 rounded-2xl shadow-2xl space-y-4 pdf-seccion hidden border border-amber-500/40">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-amber-500 font-bold">📋</span>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Historial Completo de Muestras y Variables de Laboratorio</h3>
+                    </div>
+                    <button onclick="toggleCuadroHistorial()" class="text-xs text-slate-400 hover:text-white px-2 py-1 bg-slate-900 rounded border border-slate-800">Cerrar ✕</button>
                 </div>
-                <div id="historial-muestras-lab" class="space-y-2 max-h-44 overflow-y-auto text-xs text-slate-300 font-mono">
+                <p class="text-[11px] text-slate-400">Registro histórico integral con fecha, hora, caudal, banco fluvial, retenciones de tamices y parámetros normatizados:</p>
+                <div id="historial-muestras-lab" class="space-y-3 max-h-96 overflow-y-auto text-xs font-mono pr-1">
                     <p class="text-slate-600 italic">No se han registrado muestras en esta sesión de análisis.</p>
                 </div>
             </div>
@@ -220,6 +228,7 @@
     <script>
         let labChart = null;
         let historialMuestras = [];
+        let historialVisible = false;
 
         function actualizarSimulacionLab() {
             const caudalPlanta = parseFloat(document.getElementById('caudal-planta-input').value) || 50;
@@ -287,29 +296,54 @@
         }
 
         function registrarMuestraLaboratorio() {
-            const ahora = new Date().toLocaleTimeString();
-            const caudal = document.getElementById('caudal-planta-input').value;
-            const banco = document.getElementById('banco-origen').selectedOptions[0].text;
+            const ahora = new Date().toLocaleString();
+            const caudal = document.getElementById('caudal-planta-input').value + ' tn/h';
+            const banco = document.getElementById('banco-origen').value;
+            const tiempoSilo = document.getElementById('tiempo-silo-input').value + ' Horas';
+            const humedad = document.getElementById('humedad-input').value + '%';
+            const arcilla = document.getElementById('arcilla-input').value + '%';
+            
+            const r236 = document.getElementById('t-236').value + '%';
+            const r118 = document.getElementById('t-118').value + '%';
+            const r060 = document.getElementById('t-060').value + '%';
+            const r030 = document.getElementById('t-030').value + '%';
+            const r015 = document.getElementById('t-015').value + '%';
+            const rFondo = document.getElementById('t-fondo').value + '%';
+
             const fm = document.getElementById('res-fm').value;
             const cu = document.getElementById('res-cu').value;
-            const humedad = document.getElementById('humedad-input').value;
 
             const registro = {
-                hora: ahora,
+                fechaHora: ahora,
+                caudal: caudal,
                 banco: banco,
-                caudal: caudal + ' tn/h',
+                tiempoSilo: tiempoSilo,
+                humedad: humedad,
+                arcilla: arcilla,
+                tamices: { r236, r118, r060, r030, r015, rFondo },
                 fm: fm,
-                cu: cu,
-                humedad: humedad + '%'
+                cu: cu
             };
 
             historialMuestras.unshift(registro);
             actualizarTablaHistorial();
+            alert('¡Muestra y todas las variables del micrositio registradas exitosamente en el historial!');
+        }
+
+        function toggleCuadroHistorial() {
+            const contenedor = document.getElementById('contenedor-historial-oculto');
+            historialVisible = !historialVisible;
+            if (historialVisible) {
+                contenedor.classList.remove('hidden');
+                contenedor.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+                contenedor.classList.add('hidden');
+            }
         }
 
         function actualizarTablaHistorial() {
             const contenedor = document.getElementById('historial-muestras-lab');
-            document.getElementById('contador-muestras').textContent = historialMuestras.length + ' Registros';
+            document.getElementById('badge-contador-historial').textContent = historialMuestras.length;
 
             if (historialMuestras.length === 0) {
                 contenedor.innerHTML = '<p class="text-slate-600 italic">No se han registrado muestras en esta sesión de análisis.</p>';
@@ -317,12 +351,24 @@
             }
 
             let html = '';
-            historialMuestras.forEach((m) => {
-                html += `<div class="p-2.5 bg-slate-900 border border-slate-800 rounded-lg flex justify-between items-center">
-                    <div>
-                        <span class="text-amber-400 font-bold">[${m.hora}]</span> <span class="text-slate-300">${m.caudal}</span> - FM: <span class="text-white">${m.fm}</span> | Cu: <span class="text-emerald-400">${m.cu}</span>
+            historialMuestras.forEach((m, idx) => {
+                html += `<div class="p-3 bg-slate-900 border border-slate-800 rounded-xl space-y-2">
+                    <div class="flex justify-between items-center border-b border-slate-800/80 pb-1.5 text-[11px]">
+                        <span class="text-amber-400 font-bold">#${historialMuestras.length - idx} — [${m.fechaHora}]</span>
+                        <span class="bg-slate-950 px-2 py-0.5 rounded text-slate-300 font-semibold">${m.banco}</span>
                     </div>
-                    <span class="text-[10px] bg-slate-950 px-2 py-0.5 rounded text-slate-400">Humedad: ${m.humedad}</span>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px] text-slate-300">
+                        <div><span class="text-slate-500">Caudal:</span> <strong class="text-amber-400">${m.caudal}</strong></div>
+                        <div><span class="text-slate-500">Retención Silo:</span> <strong class="text-white">${m.tiempoSilo}</strong></div>
+                        <div><span class="text-slate-500">Humedad:</span> <strong class="text-white">${m.humedad}</strong></div>
+                        <div><span class="text-slate-500">Finos/Limos:</span> <strong class="text-white">${m.arcilla}</strong></div>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px] text-slate-300 bg-slate-950/60 p-2 rounded-lg">
+                        <div><span class="text-slate-500">>2.36 / 1.18:</span> ${m.tamices.r236} / ${m.tamices.r118}</div>
+                        <div><span class="text-slate-500">0.60 / 0.30:</span> ${m.tamices.r060} / ${m.tamices.r030}</div>
+                        <div><span class="text-slate-500">0.15 / Fondo:</span> ${m.tamices.r015} / ${m.tamices.rFondo}</div>
+                        <div><span class="text-slate-500">FM / Cu:</span> <span class="text-white font-bold">${m.fm}</span> / <span class="text-emerald-400 font-bold">${m.cu}</span></div>
+                    </div>
                 </div>`;
             });
             contenedor.innerHTML = html;
@@ -341,16 +387,22 @@
             btnPdf.disabled = true;
 
             try {
+                // Asegurar visibilidad temporal del cuadro de historial para que salga en el PDF si contiene registros
+                const contenedorHistorial = document.getElementById('contenedor-historial-oculto');
+                const estabaOculto = contenedorHistorial.classList.contains('hidden');
+                if (estabaOculto && historialMuestras.length > 0) {
+                    contenedorHistorial.classList.remove('hidden');
+                }
+
                 const pdf = new jsPDF('landscape', 'mm', 'a4');
                 const pdfWidth = pdf.internal.pageSize.getWidth();
                 const pdfHeight = pdf.internal.pageSize.getHeight();
                 
-                const secciones = document.querySelectorAll('.pdf-seccion');
+                const secciones = document.querySelectorAll('.pdf-seccion:not(.hidden)');
                 
                 for (let i = 0; i < secciones.length; i++) {
                     const seccion = secciones[i];
                     
-                    // Asegurar expansión temporal de scroll si aplica
                     const contenedorScroll = seccion.querySelector('#historial-muestras-lab');
                     let alturaOriginal = '';
                     if (contenedorScroll) {
@@ -378,7 +430,6 @@
                         pdf.addPage();
                     }
 
-                    // Título de página / membrete ejecutivo
                     pdf.setFont("helvetica", "bold");
                     pdf.setFontSize(11);
                     pdf.setTextColor(245, 158, 11);
@@ -389,8 +440,11 @@
                     pdf.setTextColor(148, 163, 184);
                     pdf.text(`Sección ${i + 1} de ${secciones.length} — Fecha: ${new Date().toLocaleDateString()}`, 10, 15);
 
-                    // Insertar imagen del bloque adaptada a la hoja
                     pdf.addImage(imgData, 'PNG', 10, 20, pdfWidth - 20, Math.min(imgHeight, pdfHeight - 30));
+                }
+
+                if (estabaOculto) {
+                    contenedorHistorial.classList.add('hidden');
                 }
 
                 pdf.save('GRAVAFILT-Reporte-Laboratorio-Multihoja.pdf');
