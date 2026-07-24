@@ -102,15 +102,15 @@
                     </div>
                 </div>
 
-                <!-- Índices Calculados -->
+                <!-- Índices Editables por Laboratorio -->
                 <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800/80">
-                    <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
-                        <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Módulo de Fineza (FM)</span>
-                        <span id="res-fm" class="text-lg font-mono font-bold text-white mt-1 block">2.65</span>
+                    <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 space-y-1">
+                        <label class="text-[10px] text-slate-400 uppercase tracking-wider block font-bold">Módulo de Fineza (FM)</label>
+                        <input type="number" id="res-fm" value="2.65" step="0.01" min="1.0" max="4.0" oninput="actualizarSimulacionLab()" class="w-full bg-slate-950 border border-slate-800 rounded p-1.5 text-sm font-mono font-bold text-white text-center focus:outline-none focus:border-amber-500">
                     </div>
-                    <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
-                        <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Coef. Uniformidad (Cu)</span>
-                        <span id="res-cu" class="text-lg font-mono font-bold text-emerald-400 mt-1 block">2.14</span>
+                    <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 space-y-1">
+                        <label class="text-[10px] text-slate-400 uppercase tracking-wider block font-bold">Coef. Uniformidad (Cu)</label>
+                        <input type="number" id="res-cu" value="2.14" step="0.01" min="1.0" max="10.0" oninput="actualizarSimulacionLab()" class="w-full bg-slate-950 border border-slate-800 rounded p-1.5 text-sm font-mono font-bold text-emerald-400 text-center focus:outline-none focus:border-amber-500">
                     </div>
                 </div>
             </div>
@@ -124,7 +124,7 @@
                 <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                     <div>
                         <h2 class="text-sm font-bold uppercase tracking-wider text-amber-500">Planificación de Producción y Mallas Optimizadas</h2>
-                        <p class="text-xs text-slate-400">Ratios sincronizados con el caudal real de ingreso para cumplir compromisos de venta.</p>
+                        <p class="text-xs text-slate-400">Ratios sincronizados con los parámetros reales de laboratorio e ingreso a planta.</p>
                     </div>
                     <span class="px-3 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full text-xs font-mono font-bold">PLANIFICADOR ACTIVO</span>
                 </div>
@@ -216,13 +216,6 @@
             const r015 = parseFloat(document.getElementById('t-015').value) || 0;
             const rFondo = parseFloat(document.getElementById('t-fondo').value) || 0;
 
-            const acumuladoFM = (r236 + r118 + r060 + r030 + r015) / 100 * 1.5; 
-            const fmFinal = Math.max(1.8, Math.min(3.2, acumuladoFM + 2.0)).toFixed(2);
-            const cuFinal = (1.7 + (r060 / 30)).toFixed(2);
-
-            document.getElementById('res-fm').textContent = fmFinal;
-            document.getElementById('res-cu').textContent = cuFinal;
-
             const tTotal = r236 + r118 + r060 + r030 + r015 + rFondo || 100;
             const p1 = ((r236 + r118) / tTotal * 100).toFixed(1);
             const p2 = (r060 / tTotal * 100).toFixed(1);
@@ -234,7 +227,6 @@
             document.getElementById('rend-3').textContent = p3 + '%';
             document.getElementById('rend-4').textContent = p4 + '%';
 
-            // Cálculo exacto de toneladas por hora según el caudal real ingresado
             document.getElementById('vol-1').textContent = (caudalPlanta * p1 / 100).toFixed(1) + ' tn/h';
             document.getElementById('vol-2').textContent = (caudalPlanta * p2 / 100).toFixed(1) + ' tn/h';
             document.getElementById('vol-3').textContent = (caudalPlanta * p3 / 100).toFixed(1) + ' tn/h';
@@ -271,7 +263,7 @@
         }
 
         function sincronizarConPlanta() {
-            alert('¡Caudal de ingreso y parámetros granulométricos sincronizados con éxito hacia el simulador principal GRAVAFILT 3.0!');
+            alert('¡Parámetros editados de laboratorio y caudal sincronizados con éxito hacia el simulador principal GRAVAFILT 3.0!');
             window.location.href = 'index.html';
         }
 
